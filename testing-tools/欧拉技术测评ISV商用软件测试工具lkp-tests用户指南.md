@@ -80,7 +80,7 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 ## 步骤2. 安装兼容性测试依赖
      
     lkp split-job $LKP_PATH/jobs/compatibility-test.yaml
-    lkp install -fcompatibility-test-defaults.yaml
+    lkp install -f compatibility-test-defaults.yaml
 执行成功后会在执行命令目录生成 compatibility-test-defaults.yaml 文件，用于后续任务调度，后续执行## 步骤3，也需要切换到此目录。
 
 ## 步骤3. 执行兼容性测试
