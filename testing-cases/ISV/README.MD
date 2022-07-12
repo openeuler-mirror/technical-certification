@@ -4,12 +4,12 @@
 该测试套包含了鲲鹏与欧拉认证所需的测试项，这样在进行鲲鹏与欧拉的交叉认证时，只需将该工具执行一次就行。
 
 ## 前提条件
-- 安装好lkp-tests测试工具，安装步骤如下
-    1. 工具源码。
+- 安装好lkp-tests测试工具，安装步骤如下：
+    1. 工具源码
        ```shell
         git clone https://gitee.com/wu_fengguang/lkp-tests.git
        ```
-    2. 修改ruby gems源.
+    2. 修改ruby gems源
        ```shell
         cd lkp-tests
         sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
@@ -30,7 +30,11 @@
         source /etc/profile
        ```
 
-- 关闭防火墙(临时):  systemctl stop firewalld.service
+- 关闭防火墙(临时):  
+       ```shell
+        systemctl stop firewalld.service
+       ```
+
 - 停止业务软件(即环境空载)： 为避免后台存在其它进程正在运行影响后续测试结果可靠性。正式测试之前,停止所有伙伴业务应用软件进程(无需卸载),例如恢复到业务软件未安装之前的系统资源占用状态,以便监控测试过程中CPU，内存，硬盘，网卡等系统资源
 
 ## 操作步骤
