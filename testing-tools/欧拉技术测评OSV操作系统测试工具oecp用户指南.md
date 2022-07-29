@@ -68,7 +68,7 @@ OECP工具比较的是2个ISO之间的静态差异，OECP工具需借助compass-
 ## 步骤2. 查看结果
     
     在结果文件osv_data_summary.xlsx中查看测试结果
-![静态差异的OSV认证报告](http://image.huawei.com/tiny-lts/v1/images/44e1d344d64df67bc6ba88e4ea1fce2e_1071x724.png@900-0-90-f.png)
+![静态差异的OSV认证报告](docs/oecp结果截图.png)
 
 
 ### -- 结束

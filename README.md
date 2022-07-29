@@ -28,7 +28,7 @@
 - 步骤6. 通过评审后，即进入证书发放流程，此阶段欧拉社区会先对证书信息进行初审，通过后由伙伴对证书信息进行二次确认。
 - 步骤7. 如社区和伙伴双方都对证书信息确认无误，社区进行证书的签发，并自动同步刷新到兼容性清单，完成整个流程。
 
-说明：详细的平台使用指引请见技术测评平台指导书。
+说明：详细的平台使用指引请见[技术测评平台用户指南](技术测评平台用户指南.md)。
 
 ## 技术测评标准
 
@@ -48,9 +48,9 @@
 
 | 技术测评对象      | 用例基线                  | 测试工具               | 说明 |
 | :------------ | ------------------------- | ---------------------- | ---- |
-| OSV商用发行版 | [OSV商用发行版测试用例集](https://gitee.com/openeuler/oecp)     | oecp         |      |
-| ISV商用软件   | [ISV商用软件测试用例集](testing-standard/欧拉技术测评兼容性测试用例（ISV商用软件）.md)     | compass-ci/lkp-tests             |      |
-| IHV整机和板卡 | [整机用例集+板卡测试用例集](testing-standard/欧拉技术测评兼容性测试用例（整机&板卡）.md) | oec-hardware |      |
+| OSV商用发行版 | [OSV商用发行版测试用例集](https://gitee.com/openeuler/oecp)     | [oecp](testing-tools/欧拉技术测评OSV操作系统测试工具oecp用户指南.md)       |      |
+| ISV商用软件   | [ISV商用软件测试用例集](testing-standard/欧拉技术测评兼容性测试用例（ISV商用软件）.md)     | [lkp-tests](testing-tools/欧拉技术测评ISV商用软件测试工具lkp-tests用户指南.md) + [x2openEuler](testing-tools/欧拉技术测评ISV商用软件扫描工具x2openEuler用户指南.md)             |      |
+| IHV整机和板卡 | [整机用例集+板卡测试用例集](testing-standard/欧拉技术测评兼容性测试用例（整机&板卡）.md) | [oec-hardware](testing-tools/欧拉技术测评IHV整机&板卡测试工具oec-hardware用户指南.md) |      |
 
 ## 参与贡献
 
