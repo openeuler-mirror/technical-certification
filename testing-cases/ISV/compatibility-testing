@@ -1,0 +1,695 @@
+#!/bin/bash
+#功能描述: 进行兼容性测试、指标日志采集工具
+
+
+
+CURRENT_PATH="$(pwd)/tests"
+FILE_PATH="${LKP_PATH}/tests"
+current_time=$(date "+%Y%m%d")
+log_file="info.log_${current_time}"
+error_file="error.log_${current_time}"
+app_log_file="app_log.log_${current_time}"
+nmap_log_file="nmap.log_${current_time}"
+
+# 创建日志目录
+clear
+echo "===================测试开始: $(date "+%Y-%m-%d %H:%M:%S")==========================="
+if [[ ! -d "${CURRENT_PATH}/log" ]]; then
+    mkdir -p  ${CURRENT_PATH}/log
+fi
+
+# 清空日志文件。
+log_files=( "${CURRENT_PATH}"/log/"${error_file}" "${CURRENT_PATH}"/log/"${app_log_file}" "${CURRENT_PATH}"/log/"${nmap_log_file}" "${CURRENT_PATH}"/log/"${log_file}")
+for file in "${log_files[@]}"; do
+    if [[ -f "${file}" ]]; then
+        cat /dev/null >"${file}"
+    else
+        touch ${file}
+    fi
+done
+
+
+SYS_LOG_="messages"
+BINARY_PACK=0
+# declare -a product_result_array
+declare -a snapshot_result_array
+declare -a performance_test_pid_array
+
+write_messages() {
+    # 日志输出函数
+    # 参数1：输出日志级别
+    # 参数2：输出颜色，0-默认，31-红色，32-绿色，33-黄色，34-蓝色，35-紫色，36-天蓝色，3-白色。
+    # 参数3：执行步骤。
+    # 参数4：输出的日志内容。
+    DATE=$(date "+%Y-%m-%d %H:%M:%S")
+    messages=$4
+    step=$3
+    level_info=$1
+    colors=$2
+    case ${level_info} in
+    a) echo -e "\033[1;34m${messages}\033[0m"
+        ;;
+    i) echo "#${DATE}#info#${step}#${messages}" >> ${CURRENT_PATH}/log/"${log_file}"
+        ;;
+    e) echo "#${DATE}#error#${step}#${messages}" >> ${CURRENT_PATH}/log/"${log_file}"
+       echo -e "\033[1;31m${messages}\033[0m"
+        ;;
+    m) echo "#${DATE}#value#${step}#${messages}" >> ${CURRENT_PATH}/log/"${log_file}" ;;
+    s) echo "#${DATE}#serious#${step}#${messages}" >> ${CURRENT_PATH}/log/"${error_file}"
+       echo -e "\033[1;31m${messages}\033[0m"
+        ;;
+    c) echo -e "\033[1;${colors}m${messages}\033[0m"
+       echo "#${DATE}#info#${step}#${messages}" >> ${CURRENT_PATH}/log/"${log_file}"
+        ;;
+    esac
+    sleep 1
+}
+
+kill_process() {
+    # 强制杀死进程
+    OLD_IFS="${IFS}"
+    IFS=','
+    process_name=$1
+    kill_results=""
+    kill_result="$(pgrep -f "${process}" | xargs kill -9 >> ${CURRENT_PATH}/log/"${log_file}"  2>&1)"
+    if [[ "${kill_result}" != '' ]]; then
+        kill_results="${kill_result}"";""${kill_result}"
+    fi
+    IFS="${OLD_IFS}"
+}
+
+counting_time(){
+    ds=$1
+    (
+        tput sc
+        for ((dsec = "${ds}"; dsec > 0; dsec--)); do
+            min=$((dsec / 60))
+            se=$((dsec % 60))
+            tput rc
+            tput ed
+            echo -ne "\r 采集预计剩余时间：${min}:${se}\r"
+            sleep 1
+        done
+    ) &
+}
+
+
+
+
+notice_users() {
+    write_messages  c 34 0 "自动化兼容性测试开始前，请用户先填写配置文件compatibility_testing.conf，填写说明请参考README"
+    write_messages  c 34 0 "自动化兼容性测试开始执行，脚本分为9个步骤，运行时间约13分钟，请耐心等待。"
+    write_messages  i 0 0  "自动化测试采集工具开始执行。"
+    write_messages  a 0 0  "自动化测试采集工具开始执行。"
+}
+
+production_env_waring() {
+    write_messages  c 31 0  "请注意以下是为保证测试过程能够顺利进行的3个必要条件："
+    write_messages  c 31 0  "1.为了有权限检查系统日志，请使用root用户执行脚本"
+    write_messages  c 31 0  "2.若安装KunpengDeveloper工具，测试期间停止该工具"
+    write_messages  c 31 0  "3.测试期间会不断启动和停止待测试应用软件，请勿在生产环境执行兼容性测试工具。默认当前环境不是生产环境。"
+   
+}
+
+
+check_configuration() {  
+    # 检查用户填写配置项是否为空
+    config_file="${FILE_PATH}/compatibility-testing.conf"
+
+    if [[ -f "${config_file}" ]]; then
+        application_names=$(sed '/^application_names=/!d;s/application_names=//' "${config_file}")
+        start_app_commands=$(sed '/^start_app_commands=/!d;s/start_app_commands=//' "${config_file}")
+        stop_app_commands=$(sed '/^stop_app_commands=/!d;s/stop_app_commands=//' "${config_file}")
+        start_performance_scripts=$(sed '/^start_performance_scripts=/!d;s/start_performance_scripts=//' "${config_file}")
+        binary_file=$(sed '/^binary_file=/!d;s/binary_file=//' "${config_file}")
+        if [[ -z "${application_names}" ]]; then
+            write_messages  e 31 2 "配置文件中的应用名称为空,请填写正确后重启脚本。"
+            exit 
+        fi
+        if [[ -z "${start_app_commands}" ]]; then
+            write_messages  e 31 2 "配置文件中的应用启动命令为空。"
+            exit
+        fi
+        if [[ -z "${stop_app_commands}" ]]; then
+            write_messages  e 31 2 "配置文件中的应用停止命令为空。"
+            exit
+        fi
+        if [[ -z "${start_performance_scripts}" ]]; then
+            write_messages  e 31 2  "配置文件中的压力测试工具启动命令为空。"
+            exit
+        fi
+        if [[ -n "${binary_file}" ]];then
+            BINARY_PACK=1
+        fi
+    else
+        write_messages  e 31 2 "配置文件不存在，请检查。"
+        exit
+    fi
+}
+
+create_result_dir() {   
+    # 创建采集目录
+    write_messages  i 0 1 "创建目录"
+    result_dirs=("data/hardware/" "data/software/"  "data/product/"
+    "data/test/performance/" "data/test/compatiable/" "data/test/power" "data/test/safety/")
+    for dir in "${result_dirs[@]}"; do
+	real_dir="${CURRENT_PATH}/${dir}"
+        if [[ ! -d "${real_dir}" ]]; then
+            mkdir -p "${real_dir}"
+        else
+            find "${real_dir}" -type f -name "*.log*" -exec rm {} \;
+        fi
+    done
+}
+
+
+# 检查系统环境，安装依赖软件
+env_preparation() {    
+    
+    bash "${FILE_PATH}/env_preparation.sh"
+    if [[ $? -ne 0 ]]; then
+        write_messages e 0 1 "安装依赖软件失败，失败原因请查看目录${CURRENT_PATH}/log/${log_file} 的日志"
+        exit
+    fi
+}
+
+sys_env_inspectation() {   
+    # 从CPU、内存、硬盘和网卡四个角度检查利用率是否过高，如果过高则提升当前环境非空闲
+    bash "${FILE_PATH}/env_inspectation.sh"
+
+    if [[ $? -ne 0 ]]; then
+        write_messages e 0 1 "当前服务器的环境非空闲，请停止运行的业务软件，详细信息查看目录${CURRENT_PATH}/log/${log_file} 的日志"
+        exit
+    fi
+
+}
+
+
+get_service_info() {    #==========================5=========================
+    # 获取服务器信息
+    # 功能描述：获取测试环境的硬件配置
+    # bash "${CURRENT_PATH}/obtain_service_info.sh"
+	
+    if [[ ${BINARY_PACK} -eq 1 ]]; then
+        if [[ -f ${binary_file} ]]; then
+
+            gcc_file="${CURRENT_PATH}/data/software/system_version.log"
+            echo -e "\n=${binary_file}=" >>${gcc_file} 2>> /dev/null;
+            echo -e "\n=============binary files=============" >>${gcc_file} 2>> /dev/null;
+            strings ${binary_file} |grep -E 'GCC|gcc|clang' >>${gcc_file} 2>> /dev/null;
+        else
+            write_messages e 0 4 "配置文件填写的二进制文件不存在。"
+        fi
+    fi
+
+	file_name_list=("data/hardware/hardware_info.log" "data/hardware/hardware_pcie.log" "data/hardware/hardware_cpu.log"
+      "data/hardware/hardware_disk.log" "data/software/system_version.log")
+    command_list=("dmidecode" "lspci -nnvv" "lscpu" "lsblk" "cat /proc/version")
+    command_desc=("服务器型号" "pci信息" "CPU信息" "硬盘分区" "内核信息")
+    length=${#file_name_list[@]}
+    for ((i = 0; i < "${length}"; i++)); do
+        file_name="${CURRENT_PATH}/${file_name_list[$i]}"
+        comm=${command_list[$i]}
+        desc=${command_desc[$i]}
+        if ! eval "${comm}" >"${file_name}"; then
+            write_messages   e 0 4 "调用命令${comm}获取${desc}失败"
+        else
+            write_messages  i 0 4 "调用命令${comm}获取${desc}完成"
+        fi
+    done
+
+    if hash smartctl 2>/dev/null ; then
+        smatrt_file="${CURRENT_PATH}/data/hardware/hardware_smartctl.log"
+        OLD_IFS="${IFS}"
+        IFS=$'\n'
+        for device in $(smartctl --scan|awk -F"#"  '{print $1}');
+        do
+            smartctl_cmd="smartctl -a ${device}"
+            eval "${smartctl_cmd}" >> "${smatrt_file}" 2>> /dev/null;
+        done
+        IFS="${OLD_IFS}"
+    fi
+
+
+    if hash gcc 2>/dev/null ; then
+        gcc_file="${CURRENT_PATH}/data/software/system_version.log"
+        echo -e "\n=============gcc=============" >>${gcc_file} 2>> /dev/null;
+        gcc --version >> ${gcc_file} 2>> /dev/null;
+    fi
+
+    if hash clang 2>/dev/null ; then
+        echo -e "\n=============clang=============" >>${gcc_file} 2>> /dev/null;
+        clang --version >> ${gcc_file} 2>> /dev/null;
+    fi
+
+    if hash java 2>/dev/null ; then
+        echo -e "\n=============java=============" >>${gcc_file} 2>> /dev/null;
+        java -version >> ${gcc_file} 2>> /dev/null 2>&1;
+    fi
+
+
+
+}
+
+check_process_exits_stop() {   
+    # 检查业务应用是否存在，如果存在停止进程。
+    step=$1
+    OLD_IFS="${IFS}"
+    IFS=','
+    read -r -a app_list <<< "$application_names"
+    read -r -a stop_comm_list <<< "$stop_app_commands"
+    length=${#app_list[@]}
+    sleep_time=10
+    STOP_APP_FLAG=0
+    for ((i = 0; i < "${length}"; i++)); do
+        process=${app_list[$i]}
+        ps_result="$(pgrep -lf ${process})"
+        if [[ "${ps_result}" != "" ]]; then
+            write_messages  i 34 "${step}" "进程${process}存在"
+            STOP_APP_FLAG=1
+        else
+            if [[ ${step} -ne  4 ]]; then
+                write_messages  i 34 "${step}" "进程${process}不存在"
+            fi
+        fi
+    done
+    if [[ "${step}" -eq 9   &&  "${STOP_APP_FLAG}" -eq 0 ]] ; then
+        for stop_comm in  "${stop_comm_list[@]}"; do
+            eval "${stop_comm}" >>  "${CURRENT_PATH}"/log/"${app_log_file}"  2>&1
+            if [[ "$?" -ne 0 ]]; then
+                cd "${CURRENT_PATH}"||exit
+                write_messages  e 0 "${step}" "执行${stop_comm}出错"
+            else
+            cd "${CURRENT_PATH}"||exit
+            fi
+        done
+    fi
+    if [[ "${STOP_APP_FLAG}" -eq 1 ]] ; then
+        for stop_comm in  "${stop_comm_list[@]}"; do
+            eval "${stop_comm}" >>  "${CURRENT_PATH}"/log/"${app_log_file}"  2>&1
+            if [[ "$?" -ne 0 ]]; then
+                cd "${CURRENT_PATH}"||exit
+                write_messages  e 0 "${step}" "执行${stop_comm}出错"
+            else
+                cd "${CURRENT_PATH}"||exit
+            fi
+        done
+        for ((i = 0; i < "${length}"; i++)); do
+            process=${app_list[$i]}
+            check_times=5
+            while [[ ${check_times} -gt 0 ]];do
+                sleep "${sleep_time}"
+                ps_result="$(pgrep -lf ${process})"
+                if [[ "${ps_result}" != "" ]]; then
+                    write_messages  e 0 "${step}" "执行${stop_comm}后，等待${sleep_time}秒，${process}存在"
+                    kill_process ${process}
+                    check_times=$((check_times -1))
+                else
+                    if [[ ${step} -ne  4 ]]; then
+                        write_messages  e 34 "${step}" "进程${process}不存在"
+                    fi
+                    break
+                fi
+            done
+            if [[ ${check_times} -le 0 ]] ; then
+                write_messages  e 0 "${start_step}" "停止业务应用${process}失败，请用户检查停止脚本。"
+                exit
+            fi
+        done
+    fi
+ 
+    IFS="${OLD_IFS}"
+}
+
+
+get_performance() {   
+    # 进行CPU、内存、硬盘、网卡和功耗指标采集
+    # 参数1：采集时间间隔
+    # 参数2：采集时长
+    # 参数3：采集序列，0：表示兼容测前采集，1：表示性能测试采集，2表示兼容测试后采集
+    # 参数4：步骤
+    frequency=$1
+    seq=$3
+    during_time=$2
+    step=$4
+
+    if [[ ${step} -eq 7 ]]; then
+	    counting_time 150
+    else
+	    counting_time 90
+    fi
+
+    times=$((during_time * 20 / frequency))
+    desc_array=('兼容性测试前采集' '性能测试采集' '兼容性测试后采集')
+    if [[ "${seq}" -eq 1 ]]; then
+        file_path="${CURRENT_PATH}/data/test/performance/"
+        file_seq=1
+    elif [[ "${seq}" -eq 0 ]]; then
+        file_path="${CURRENT_PATH}/data/test/compatiable/"
+        file_seq=0
+    else
+        file_path="${CURRENT_PATH}/data/test/compatiable/"
+        file_seq=1
+    fi
+    if [[ ! -d "${file_path}" ]]; then
+        mkdir -p "${file_path}"
+    fi
+	
+    file_name="test_perf_cpu_${file_seq}.log"
+    write_messages  i 0 "${step}" "${desc_array[${seq}]}:调用sar -u ${frequency} ${times}命令采集CPU指标"
+
+    if ! sar -u "${frequency}" ${times} >"${file_path}""${file_name}"; then
+        write_messages  e 0 "${step}"  "调用sar -u ${frequency} ${times}命令采集CPU指标失败"
+        write_messages  s 0 "${step}"  "${desc_array[${seq}]}调用sar -u ${frequency} ${times}命令采集CPU指标失败"
+    fi
+    file_name="test_perf_mem_${file_seq}.log"
+    write_messages  i 0 "${step}" "${desc_array[${seq}]}:调用sar -r ${frequency} ${times}命令采集内存指标"
+    if ! sar -r "${frequency}" ${times} >"${file_path}""${file_name}"; then
+        write_messages  e 0 "${step}"  "调用sar -r ${frequency} ${times}命令采集内存指标失败"
+        write_messages  s 0 "${step}"  "${desc_array[${seq}]}调用sar -r ${frequency} ${times}命令采集内存指标失败"
+    fi
+    file_name="test_perf_net_${file_seq}.log"
+    write_messages  i 0 "${step}" "${desc_array[${seq}]}:调用sar -n DEV ${frequency} ${times}命令采集网卡指标"
+    if ! sar -n DEV "${frequency}" ${times} >"${file_path}""${file_name}"; then
+        write_messages  e 0 "${step}"   "调用sar -n DEV ${frequency} ${times}命令采集网卡指标失败"
+        write_messages  s 0 "${step}"   "${desc_array[${seq}]}调用sar -n DEV ${frequency} ${times}命令采集网卡指标失败"
+    fi
+    file_name="test_perf_disk_${file_seq}.log"
+    write_messages  i 0 "${step}" "${desc_array[${seq}]}:调用sar -d -p ${frequency} ${times}命令采集硬盘指标"
+    if ! sar -d -p "${frequency}" ${times} >"${file_path}""${file_name}"; then
+        write_messages  e 0 "${step}"  "调用sar -d -p ${frequency} ${times}命令采集硬盘指标失败"
+        write_messages  s 0  "${step}" "${desc_array[${seq}]}调用sar -d -p ${frequency} ${times}命令采集硬盘指标失败"
+    fi
+    if [[ "${seq}" -ne 1 ]];then
+        write_messages  i 0 "${step}" "${desc_array[${seq}]}:调用ipmitool采集功耗指标"
+        file_name="test_power_${file_seq}.log"
+        times=$((during_time * 20 / frequency))
+        while [[ ${times} -gt 0 ]];
+        do
+            if ! ipmitool -I open sensor get 'Power'|grep 'Sensor Reading '|awk '{print $4}' \
+            >>"${power_path}""${file_name}"; then
+            write_messages   e 0 "${step}" "调用ipmitool -I open sensor get 'Power'采集功耗失败"
+        fi
+        sleep "${frequency}"
+        times=$((times-1))
+        done
+        write_messages  i 0 "${step}" "功耗测试已完成"
+    fi
+    write_messages  i 0 "${step}" "${desc_array[${seq}]}已完成"
+}
+
+
+start_app(){    
+    # 启动业务应用进程
+    start_step=$1
+    if [[ ${start_step} -eq 5 ]];then
+        check_process_exits_stop "${start_step}"
+    fi
+    OLD_IFS="${IFS}"
+    IFS=','
+    read -r -a app_list <<< "$application_names"
+    read -r -a start_comm_list <<< "$start_app_commands"
+    length=${#app_list[@]}
+
+    SLEEP_TIME=10
+	for start_comm in  "${start_comm_list[@]}"; do
+        if  ! eval "${start_comm}" >> "${CURRENT_PATH}"/log/"${app_log_file}" 2>&1 ;then
+            cd "${CURRENT_PATH}"||exit
+            write_messages  e 0 "${start_step}" "执行${start_comm}报错，请手动执行命令启动业务应用"
+            exit
+        fi
+#	    cd "${CURRENT_PATH}"||exit
+	done
+	for ((i = 0; i < "${length}"; i++)); do
+	    process=${app_list[$i]}
+        check_times=5
+        while [[ ${check_times} -gt 0 ]];do
+            sleep "${SLEEP_TIME}"
+            ps_result="$(pgrep -lf ${process})"
+            if [[ "${ps_result}" != "" ]]; then
+                write_messages  i 0 "${start_step}" "业务应用${process}启动完成。"
+		write_messages  a 0 "${start_step}" "业务应用${process}启动完成。"
+                break
+            else
+                check_times=$((check_times -1))
+            fi
+        done
+        if [[ ${check_times} -le 0 ]]; then
+            write_messages  e 0 "${start_step}" "启动业务应用${process}失败，请用户检查启动脚本。"
+            exit
+        fi
+    done	
+    IFS="${OLD_IFS}"
+}
+
+
+get_ps_snapshot() {    
+    # 获取服务器进程的快照
+
+    file_path="${CURRENT_PATH}/data/product/"
+    file_name='product_name.log'
+    index=0
+    if ! ps aux >${file_path}${file_name}; then
+        snapshot_result_array[$index]='False'
+        write_messages  e 0 5 "调用ps aux命令获取服务器进程快照失败"
+	exit
+    else
+        snapshot_result_array[$index]='True'
+    fi
+    
+}
+
+port_scan() {    
+    # 安全扫描，使用nmap进行端口扫描
+    file_path="${CURRENT_PATH}/data/test/safety/"
+
+    write_messages  i 0 6 "现在进行端口安全测试"
+    ip_addrs=$(ifconfig -a | grep inet | grep -v '127.0.0.1\|172.17.0.1' | grep -v inet6 \
+    | awk '{print $2}' | sed -e 's/addr://g')
+    if [ -z "${ip_addrs}" ]; then
+        write_messages  e 0 6 "获取主机IP地址出错"
+    fi
+
+    for ip in ${ip_addrs}; do
+        write_messages  c 34 6 "安全测试采集:执行${ip}的 TCP 端口扫描"
+        if ! nmap -sS -A -v --reason -p- -n -Pn -oA ${file_path}"${ip}""tcp" "${ip}" --host-timeout 360\
+        >>${CURRENT_PATH}/log/"${nmap_log_file}" 2>&1; then
+            write_messages  e 0 6 "${ip}的TCP 端口扫描出错"
+        fi
+        write_messages  c 34 6 "安全测试采集:执行${ip}的 UDP 端口扫描"
+        if ! nmap -sU -A -v --reason -p- -n -Pn -oA ${file_path}"${ip}""udp" "${ip}" --host-timeout 360\
+        >>${CURRENT_PATH}/log/"${nmap_log_file}" 2>&1; then
+            write_messages  e 0 6 "${ip}的UDP 端口扫描出错"
+        fi
+        write_messages  c 34 6 "安全测试采集:执行${ip}的 protocol扫描"
+        if ! nmap -sO -v --reason -n -oA  ${file_path}"${ip}""protocol" "${ip}" --host-timeout 360\
+        >>${CURRENT_PATH}/log/"${nmap_log_file}" 2>&1; then
+            write_messages  e 0 6 "${ip}的Protocol 端口扫描出错"
+        fi
+    done
+    write_messages  i 0 6 "端口安全测试结束"
+}
+
+
+
+start_performance_test(){   
+    # 调用压力测试命令进行压力测试。
+
+    write_messages  i 0 7 "启动压力测试工具"
+    OLD_IFS="${IFS}"
+    IFS=','
+    read -r -a start_performance_scripts <<< "$start_performance_scripts"
+    length=${#start_performance_scripts[@]}
+    for ((i = 0; i < "${length}"; i++)); do
+        start_script=${start_performance_scripts[$i]}
+        pattern='&$'
+        if  [[ $start_script =~ $pattern  ]];then
+            eval "${start_script}" >>  ${CURRENT_PATH}/log/"${app_log_file}"  2>&1
+            PID=$!
+            cd "${CURRENT_PATH}"||exit
+        else
+            eval "(${start_script})&" >>  ${CURRENT_PATH}/log/"${app_log_file}"  2>&1
+            PID=$!
+	    cd "${CURRENT_PATH}"||exit
+        fi
+
+        if ! ps -fp "${PID}"> /dev/null; then
+            write_messages  e 0 7 "调用命令${start_script}启动测试工具失败，请检查配置文件中应用软件的启动命令后，重新执行。"
+            exit
+        else
+            performance_test_pid_array[$i]="${PID}"
+        fi
+    done
+    IFS="${OLD_IFS}"
+
+}
+
+
+reliablity_test(){    
+    # 可靠性测试
+    OLD_IFS="${IFS}"
+    IFS=','
+    read -r -a app_list <<< "$application_names"
+    read -r -a start_comm_list <<< "$start_app_commands"
+    SLEEP_TIME=20
+    RELIABLE_TEST_FLAG=0
+    for pid in "${performance_test_pid_array[@]}"
+    do
+	# 当前pid的所有子进程
+        sub_pids=$(pgrep -P ${pid})
+        for subpid in ${sub_pids};
+        do
+            kill -9  "${subpid}" >>${CURRENT_PATH}/log/"${log_file}"  2>&1
+        done
+        disown "${pid}"
+        kill -9  "${pid}" >>${CURRENT_PATH}/log/"${log_file}"  2>&1
+        if [[ $? -ne 0 ]] ; then
+            write_messages   e 0 8 "压力测试工具停止${pid}失败."
+                   
+        fi
+        sleep "${SLEEP_TIME}"
+    done
+	
+	length=${#app_list[@]}
+    for ((i = 0; i < "${length}"; i++));
+    do
+        process=${app_list[$i]}
+        ps_result="$(pgrep -lf ${process})"
+        if [[ "${ps_result}" != "" ]]; then
+            write_messages  i 0 8 "可靠性测试前检查，业务应用进程${process}存在"
+	    write_messages  a 0 8 "可靠性测试前检查，业务应用进程${process}存在"
+            if ! kill_process ${process} >>${CURRENT_PATH}/log/"${log_file}"  2>&1 ; then
+                write_messages  e 0 8 "可靠性测试，执行强制杀死进程${process}报错，可靠性测试失败。"
+                exit
+            else
+                write_messages  i 0 8 "可靠性测试，执行强制杀死进程${process}"
+		write_messages  a 0 8 "可靠性测试，执行强制杀死进程${process}"
+            fi
+        else
+            write_messages  e 31 8 "可靠性测试前，业务应用${process}已停止，可靠性测试失败。"
+            exit
+        fi
+    done
+	sleep "${SLEEP_TIME}"
+	start_app 8
+	for ((i = 0; i < "${length}"; i++));
+    do
+        process=${app_list[$i]}
+        ps_result="$(pgrep -lf ${process})"
+        if [[ "${ps_result}" != "" ]]; then
+            write_messages  i 0 8 "可靠性测试，业务应用${process}启动完成。可靠性测试成功"
+	    write_messages  a 0 8 "可靠性测试，业务应用${process}启动完成。可靠性测试成功"
+        else
+            write_messages  e 31 8 "可靠性测试，业务应用${process}启动失败,可靠性测试失败。"
+	    exit
+        fi
+    done
+    IFS="${OLD_IFS}"
+}
+
+
+
+HCS6_PREFIX="172.35.77.249:58089/rest/v2/virtualMachine/verifyIsHCS?mac="
+HCS8_PREFIX="172.36.0.10:58089/rest/v2/virtualMachine/verifyIsHCS?mac="
+check_physical_system(){
+    # 判断当前系统是否是物理服务器
+    CURRENT_SYS=""
+    CURRENT_SYS_=$(dmidecode -s system-product-name)
+    if [[  ${CURRENT_SYS}x == ""x ]];then
+        CURRENT_SYS="${CURRENT_SYS_}"
+    else
+        CURRENT_SYS="${CURRENT_SYS}"";""${CURRENT_SYS_}"
+    fi
+    if echo "${CURRENT_SYS_}" |grep -i "virtual" ; then
+        CURRENT_MAC=$(ifconfig `nmcli connection|grep -v 'virbr0' |grep -v 'NAME' |awk '{print $1}'|egrep -E "eth|enp"` |egrep "ether" |awk '{print $2}')
+        HCS_CHECK_FLAG=$(curl --connect-timeout 5 ${HCS6_PREFIX}${CURRENT_MAC} 2> /dev/null)
+        if [[ ${HCS_CHECK_FLAG} == "" ]]; then
+            HCS_CHECK_FLAG=$(curl --connect-timeout 5 ${HCS8_PREFIX}${CURRENT_MAC} 2> /dev/null)
+        fi
+        if [[ ${HCS_CHECK_FLAG} == "" ]]; then
+            write_messages i 0 1 "KVM类型：非旗舰店HCS虚拟机。"
+        else
+            write_messages i 0 1 "KVM类型：${HCS_CHECK_FLAG}"
+        fi
+    fi
+
+}
+
+
+# echo "===================测试开始: $(date "+%Y-%m-%d %H:%M:%S")==========================="
+notice_users
+production_env_waring
+create_result_dir
+
+# 1、检查配置文件是否正确
+write_messages  c  34 1 "第 1 步：配置文件检查, 开始"
+check_configuration
+write_messages  c  34 1 "第 1 步：配置文件检查, 完成"
+
+# 2
+write_messages  c 34  1 "第 2 步：软件依赖检查，开始"
+# 检测依赖是否安装成功
+env_preparation
+write_messages  c  34 1 "第 2 步：软件依赖检查，完成"
+
+# 3、环境自检
+write_messages  c  34 3 "第 3 步：测试环境自检, 开始"
+check_physical_system
+sys_env_inspectation
+write_messages  c  34 3 "第 3 步：测试环境自检, 完成"
+
+# 4,服务器信息
+write_messages  c  34 4 "第 4 步：应用启动前CPU、内存、硬盘、网卡和功耗系统资源采集"
+# 4.1系统信息采集
+get_service_info
+# 4.2检查应用进程，若存在则停止
+check_process_exits_stop 4
+# 4.3兼容性测试前进行CPU,内存，硬盘、网卡和功耗指标采集
+get_performance 10 1 0 4
+sleep 10
+write_messages  c  34 4 "第 4 步：应用启动前采集结束"
+
+
+# 5、启动业务
+write_messages  c  34 5 "第 5 步：启动业务应用，可通过${CURRENT_PATH}/log目录info.log查看进度。"
+# 5.1应用启动
+start_app 5
+# 5.2完成快照
+get_ps_snapshot
+write_messages  c  34 5 "第 5 步：启动业务应用完成"
+
+# 6、安全检查
+write_messages  c  34 6 "第 6 步：安全测试，进行应用端口扫描，可通过${CURRENT_PATH}/log目录的nmap.log查看进度"
+port_scan
+write_messages  c  34 6 "第 6 步：安全测试结束"
+
+
+# 7进行压力测试
+write_messages  c 34 7 "第 7 步：进行业务压力下CPU、内存、硬盘和网卡系统资源采集"
+# 7.1、压力测试采集
+start_performance_test
+# 7.2、兼容性测试时进行CPU,内存，硬盘、网卡和功耗指标采集
+get_performance 10 2 1 7
+sleep 20
+write_messages  c  34 7 "第 7 步：压力测试采集结束."
+
+
+# 8、可靠性测试
+write_messages  c  34 8 "第 8 步：进行可靠性测试，强制KILL应用后正常启动测试"
+reliablity_test
+write_messages  c  34 8 "第 8 步：可靠性测试结束."
+
+
+# 9、
+write_messages  c  34 9 "第 9 步：应用停止后CPU、内存、硬盘、网卡和功耗系统资源采集"
+check_process_exits_stop 9
+get_performance 10 1 2 9
+sleep 10
+write_messages  c  34 9 "第 9 步：应用停止后资源采集结束"
+
+zip -r "compatibility-${current_time}.zip"  ${CURRENT_PATH} > /dev/null 
+echo "================测试结果保存在: ${CURRENT_PATH} 文件夹下,压缩文件保存为compatibility-${current_time}.zip================"
+echo "================测试结束：$(date "+%Y-%m-%d %H:%M:%S")==========================="
+exit
+
+
