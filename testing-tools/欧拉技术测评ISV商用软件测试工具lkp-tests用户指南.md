@@ -44,6 +44,8 @@
     
     cd lkp-tests
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
+    gem sources --remove https://rubygems.org/
+    gem sources -a https://gems.ruby-china.com/
 ## 步骤4. 执行安装
 
     make install
@@ -76,7 +78,9 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 ## 步骤1. 安装通用依赖
 
     export arch=`arch`
+    gem install git -v 1.9.1
     lkp install
+    # 注意：这里必须安装1.12以下版本的git，否则会导致接口传参出错。
 ## 步骤2. 安装兼容性测试依赖
      
     lkp split-job $LKP_PATH/jobs/compatibility-test.yaml
