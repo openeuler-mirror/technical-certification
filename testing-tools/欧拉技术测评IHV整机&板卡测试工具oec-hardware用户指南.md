@@ -46,6 +46,10 @@
 
 3. 工具日志默认存放在/usr/share，请确保目录剩余空间足够。
 
+4. 如果要测试外部驱动，请提前安装驱动，配置测试环境。
+
+   GPU、VGPU、keycard等测试项需要提前安装外部驱动，保证环境部署完成，然后使用本工具进行测试。
+
 # 芯片验证说明
 
 芯片验证和测试的流程如下：
@@ -57,6 +61,23 @@
 2. 工具默认测试内核驱动，如果需要测试外部驱动，请自行安装部署驱动；
 
 3. 测试环境准备完毕，安装测试工具，执行测试。
+
+# 离线安装环境部署要求
+
+1. 下载 openEuler 官方的 everything iso，挂载本地 repo 源。
+
+   如果在 everything iso 中无法找到依赖的软件包，请手动从 [openEuler 官方 repo](https://repo.openeuler.org/) 中下载软件包，上传至测试机中进行安装。
+
+2. 根部不同的测试项，配置离线测试依赖
+
+   | 测试项 | 文件名 | 路径 |
+   | ---- | ----- | ----- |
+   | kabi | 下载对应版本和架构的内核白名单，此处以openEuler 22.03LTS、aarch64为例：https://gitee.com/src-openeuler/kernel/blob/openEuler-22.03-LTS/kabi_whitelist_aarch64 | `/var/oech` |
+   | GPU  | https://github.com/wilicc/gpu-burn | `/opt` |
+   |      | https://github.com/NVIDIA/cuda-samples/archive/refs/heads/master.zip | `/opt` |
+   | VGPU | nvidia vgpu client驱动软件包 | /root |
+   |      | 下载对应版本和架构的虚拟机镜像文件，此处以openEuler 22.03LTS、x86_64为例：https://repo.openeuler.org/openEuler-22.03-LTS/virtual_machine_img/x86_64/openEuler-22.03-LTS-x86_64.qcow2.xz | `/opt` |
+
 
 # 工具安装
 
@@ -74,26 +95,20 @@
 
 ### 服务端
 
-1. 配置 [openEuler 官方 repo](https://repo.openeuler.org/) 中对应版本的 everything 和 update 源，使用 `dnf` 安装服务端 oec-hardware-server。
+1. 使用 `dnf` 安装服务端 oec-hardware-server。
 
    ```
    dnf install oec-hardware-server
    ```
 
-2. 服务端 web 展示页面需要的部分组件系统本身不提供，需要使用 `pip3` 安装（请自行配置可用 pip 源）。
-
-   ```
-   pip3 install Flask Flask-bootstrap uwsgi
-   ```
-
-3. 启动服务。本服务默认使用 8080 端口，同时搭配 nginx（默认端口 80）提供 web 服务，请保证这些端口未被占用。
+2. 启动服务。本服务通过搭配 nginx 服务提供 web 服务，默认使用 80 端口，可以通过 nginx 服务配置文件修改对外端口，启动前请保证这些端口未被占用。
 
    ```
    systemctl start oech-server.service
    systemctl start nginx.service
    ```
 
-4. 关闭防火墙和 SElinux。
+3. 关闭防火墙和 SElinux。
 
    ```
    systemctl stop firewalld
@@ -109,13 +124,11 @@
 
 * 框架默认会扫描所有网卡，对网卡进行测试前，请自行筛选被测网卡，并给它配上能 `ping` 通服务端的 ip；如果客户端是对 InfiniBand 网卡进行测试，服务端也必须有一个 InfiniBand 网卡并提前配好 ip 。建议不要使用业务网口进行网卡测试。
 
-* 部分用例需要root权限，请使用root用户执行。
+* `/usr/share/oech/lib/config/test_config.yaml ` 是硬件测试项配置文件模板，`fc`、`raid`、`disk`、`ethernet`、`infiniband`硬件测试前需先根据实际环境进行修改，其它硬件测试不需要修改。
 
 ## 使用步骤
 
-1. 启动测试工具
-
-   在完成安装oec-hardware软件包的客户端执行 `oech`，填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。
+1. 在客户端启动测试框架。在客户端启动 `oech`，填写`ID`、`URL`、`Server`配置项，`ID` 建议填写 gitee 上的 issue ID（注意：`ID`中不能带特殊字符）；`URL`建议填写产品链接；`Server` 必须填写为客户端可以直接访问的服务器域名或 ip，用于展示测试报告和作网络测试的服务端。服务端`nginx`默认端口号是`80`，如果服务端安装完成后没有修改该端口，`Compatibility Test Server` 的值只需要输入服务端的业务IP地址；否则需要带上端口号，比如：`172.167.145.2:90`。
 
    ```
    # oech
@@ -125,70 +138,64 @@
    Please provide the Compatibility Test Server (Hostname or Ipaddr):
    ```
 
-2. 进入测试套选择界面
-
-   在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
-
-   * 板卡测试请选择对应的板卡测试项。
-   
-   * 整机测试建议测试全部类型的测试项，至少需要测试一张RAID卡和网卡，网卡测试选择一个网口即可，注意不要使用业务网口进行测试。
+2. 进入测试套选择界面。在用例选择界面，框架将自动扫描硬件并选取当前环境可供测试的测试套，输入 `edit` 可以进入测试套选择界面。
 
    ```
-   These tests are recommended to complete the compatibility test:
-   No. Run-Now?  Status  Class         Device
-   1     yes     NotRun  acpi
-   2     yes     NotRun  clock
-   3     yes     NotRun  cpufreq
-   4     yes     NotRun  disk
-   5     yes     NotRun  ethernet      enp3s0
-   6     yes     NotRun  ethernet      enp4s0
-   7     yes     NotRun  ethernet      enp5s0
-   8     yes     NotRun  kdump
-   9     yes     NotRun  memory
-   10    yes     NotRun  perf
-   11    yes     NotRun  system
-   12    yes     NotRun  usb
-   13    yes     NotRun  watchdog
+   These tests are recommended to complete the compatibility test: 
+   No. Run-Now?  status    Class         Device         driverName     driverVersion     chipModel           boardModel
+   1     yes     NotRun    acpi                                                                              
+   2     yes     NotRun    clock                                                                             
+   3     yes     NotRun    cpufreq                                                                           
+   4     yes     NotRun    disk                                                                              
+   5     yes     NotRun    ethernet      enp3s0         hinic          2.3.2.17          Hi1822              SP580
+   6     yes     NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
+   7     yes     NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   8     yes     NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   9     yes     NotRun    ipmi                                                                              
+   10    yes     NotRun    kabi                                                                              
+   11    yes     NotRun    kdump                                                                             
+   12    yes     NotRun    memory                                                                            
+   13    yes     NotRun    perf                                                                              
+   14    yes     NotRun    system                                                                            
+   15    yes     NotRun    usb                                                                               
+   16    yes     NotRun    watchdog                                                      
    Ready to begin testing? (run|edit|quit)
    ```
 
-3. 选择测试套
-
-   `all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
+3. 选择测试套。`all|none` 分别用于 `全选|全取消`（必测项 `system` 不可取消，多次执行成功后 `system` 的状态会变为`Force`）；数字编号可选择测试套，每次只能选择一个数字，按回车符之后 `no` 变为 `yes`，表示已选择该测试套。
 
    ```
    Select tests to run:
-   No. Run-Now?  Status  Class         Device
-   1     no      NotRun  acpi
-   2     no      NotRun  clock
-   3     no      NotRun  cpufreq
-   4     no      NotRun  disk
-   5     yes     NotRun  ethernet      enp3s0
-   6     no      NotRun  ethernet      enp4s0
-   7     no      NotRun  ethernet      enp5s0
-   8     no      NotRun  kdump
-   9     no      NotRun  memory
-   10    no      NotRun  perf
-   11    yes     NotRun  system
-   12    no      NotRun  usb
-   13    no      NotRun  watchdog
+   No. Run-Now?  status    Class         Device         driverName     driverVersion     chipModel           boardModel
+   1     no      NotRun    acpi                                                                              
+   2     no      NotRun    clock                                                                             
+   3     no      NotRun    cpufreq                                                                           
+   4     no      NotRun    disk                                                                              
+   5     yes     NotRun    ethernet      enp3s0         hinic          2.3.2.17          Hi1822              SP580
+   6     no      NotRun    ethernet      enp4s0         hinic          2.3.2.17          Hi1822              SP580
+   7     no      NotRun    ethernet      enp125s0f0     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   8     no      NotRun    ethernet      enp125s0f1     hns3                             HNS GE/10GE/25GE    TM210/TM280
+   9     no      NotRun    ipmi                                                                              
+   10    no      NotRun    kabi                                                                              
+   11    no      NotRun    kdump                                                                             
+   12    no      NotRun    memory                                                                            
+   13    no      NotRun    perf                                                                              
+   14    yes     NotRun    system                                                                            
+   15    no      NotRun    usb                                                                               
+   16    no      NotRun    watchdog     
    Selection (<number>|all|none|quit|run):
    ```
 
-4. 开始测试
+4. 开始测试。选择完成后输入 `run` 开始测试。
 
-   选择完成后输入 `run` 开始测试。
-
-5. 上传测试结果
-
-   测试完成后可以上传测试结果到安装oec-hardware-server软件包的服务端，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
+5. 上传测试结果。测试完成后可以上传测试结果到服务器，便于结果展示和日志分析。如果上传失败，请检查网络配置，然后重新上传测试结果。
 
    ```
    ...
    -------------  Summary  -------------
    ethernet-enp3s0                  PASS
    system                           PASS
-   Log saved to /usr/share/oech/logs/oech-yyyymmddxxxx-xxxxxxx.tar succ.
+   Log saved to /usr/share/oech/logs/oech-20200228210118-TnvUJxFb50.tar succ.
    Do you want to submit last result? (y|n) y
    Uploading...
    Successfully uploaded result to server X.X.X.X.
