@@ -79,6 +79,7 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 ## 步骤1. 安装通用依赖
 
     export arch=`arch`
+    gem uninstall git -a
     gem install git -v 1.9.1
     lkp install
     # 注意：这里必须安装1.12以下版本的git，否则会导致接口传参出错。
