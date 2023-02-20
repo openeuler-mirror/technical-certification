@@ -43,6 +43,7 @@
 
     
     cd lkp-tests
+    注意：最新的lkp工具要求ruby版本不低于3.0；若操作系统默认安装ruby2.x, 需执行 git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92 回退lkp工具版本；在后续的执行过程中发生ERROR:  Error installing bundler，可视为正常，继续执行测试流程。
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
     gem sources --remove https://rubygems.org/
     gem sources -a https://gems.ruby-china.com/
@@ -78,6 +79,7 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 ## 步骤1. 安装通用依赖
 
     export arch=`arch`
+    gem uninstall git -a
     gem install git -v 1.9.1
     lkp install
     # 注意：这里必须安装1.12以下版本的git，否则会导致接口传参出错。
