@@ -203,7 +203,7 @@ ISV产品的测试执行达到预期结果，无报错。
 | 用例编号 | SoftwareStart                                                                                                                                                                                                                                                        |
 | 测试目的 | 目标软件可以在指定架构、操作系统上停止服务成功                                                                                                                                                                                                                       |
 | 预置条件 | 软件已成功安装。                                                                                                                                                                                                                                                     |
-| 测试步骤 | 执行如下命令，查询软件包中是否存在.service文件： rpm -ql \$softwareName \| grep -E "\\.service\$" \| awk -F "/" '{print \$NF}' 使用systemctl命令停止软件服务，检查命令执行的退出码，输出不同的测试日志，退出码非零，则判断停止服务失败 systemctl stop \$softwareName |
+| 测试步骤 | 执行如下命令，查询软件包中是否存在.service文件： rpm -ql \\$softwareName \| grep -E "\\.service\\$" \| awk -F "/" '{print \\$NF}' 使用systemctl命令停止软件服务，检查命令执行的退出码，输出不同的测试日志，退出码非零，则判断停止服务失败 systemctl stop \\$softwareName |
 | 预期结果 | 停止软件服务成功                                                                                                                                                                                                                                                     |
 | 备注     | 所有测试结果都存入es数据库，可通过前端页面查询。                                                                                                                                                                                                                     |
 
@@ -216,7 +216,7 @@ ISV产品的测试执行达到预期结果，无报错。
 | 用例编号 | SoftwareStop                                                                                                                                                                                                                                                                                                                    |
 | 测试目的 | 目标软件可以在指定架构、操作系统上启动服务成功                                                                                                                                                                                                                                                                                  |
 | 预置条件 | 软件已成功启动                                                                                                                                                                                                                                                                                                                  |
-| 测试步骤 | 执行如下命令，查询软件包中是否存在.service文件： rpm -ql \$softwareName \| grep -E "\\.service\$" \| awk -F "/" '{print \$NF}' 使用systemctl命令对软件服务进行启动，以及服务状态测试，检查命令执行的退出码， 输出不同的测试日志，退出码非零，则判断服务启动失败 systemctl start \$softwareName  systemctl status \$softwareName |
+| 测试步骤 | 执行如下命令，查询软件包中是否存在.service文件： rpm -ql \\$softwareName \| grep -E "\\.service\\$" \| awk -F "/" '{print \\$NF}' 使用systemctl命令对软件服务进行启动，以及服务状态测试，检查命令执行的退出码， 输出不同的测试日志，退出码非零，则判断服务启动失败 systemctl start \\$softwareName  systemctl status \\$softwareName |
 | 预期结果 | 软件服务停止成功                                                                                                                                                                                                                                                                                                                |
 | 备注     | 所有测试结果都存入es数据库，可通过前端页面查询。                                                                                                                                                                                                                                                                                |
 
@@ -242,7 +242,7 @@ ISV产品的测试执行达到预期结果，无报错。
 | 用例编号 | SoftwareCmdCall                                                                                                                                                                                                                                     |
 | 测试目的 | 目标软件可以在指定架构、操作系统上运行基本的命令                                                                                                                                                                                                    |
 | 预置条件 | 软件已启动成功                                                                                                                                                                                                                                      |
-| 测试步骤 | 执行如下命令，查询软件包中是否在bin或sbin目录下面存在可执行文件： rpm -ql \$softwareName \| grep -E '/s?bin/' 对查询到的可执行文件，执行--help命令，检查命令执行的退出码 输出不同的测试日志，退出码非零，则判断命令行执行失败 /usr/bin/\$cmd --help |
+| 测试步骤 | 执行如下命令，查询软件包中是否在bin或sbin目录下面存在可执行文件： rpm -ql \\$softwareName \| grep -E '/s?bin/' 对查询到的可执行文件，执行--help命令，检查命令执行的退出码 输出不同的测试日志，退出码非零，则判断命令行执行失败 /usr/bin/\\$cmd --help |
 | 预期结果 | 软件命令行运行成功                                                                                                                                                                                                                                  |
 | 备注     | 所有测试结果都存入es数据库，可通过前端页面查询。                                                                                                                                                                                                    |
 
@@ -255,7 +255,7 @@ ISV产品的测试执行达到预期结果，无报错。
 | 用例编号 | SoftwareDependency                                                                                                                                                          |
 | 测试目的 | 目标软件可以在指定架构、操作系统上查询依赖库                                                                                                                                |
 | 预置条件 | 软件已成功安装。                                                                                                                                                            |
-| 测试步骤 | 执行如下命令，查询软件包中是否在bin\|sbin\|lib\|lib64目录下面存在可执行文件： \# rpm -ql \$i \| awk -F'/' '\$3 \~ /bin\|sbin\|lib\|lib64/' 执行ldd -d -r 命令查询动态依赖库 |
+| 测试步骤 | 执行如下命令，查询软件包中是否在bin\|sbin\|lib\|lib64目录下面存在可执行文件： \# rpm -ql \\$i \| awk -F'/' '\\$3 \~ /bin\|sbin\|lib\|lib64/' 执行ldd -d -r 命令查询动态依赖库 |
 | 预期结果 | 通过ldd命令查询到动态依赖库。                                                                                                                                               |
 | 备注     | 所有测试结果都存入es数据库，可通过前端页面查询。                                                                                                                            |
 
@@ -268,7 +268,7 @@ ISV产品的测试执行达到预期结果，无报错。
 | 用例编号 | MigrateDifference                                                                                                                                                                     |
 | 测试目的 | 对于要评估的软件的依赖包、so库和接口在对应系统真实版本可能会有差异                                                                                                                    |
 | 预置条件 | x2openEuler工具已安装 x2openEuler工具完成数据库初始化和centos7.6到openEuler20.03-LTS-SP1的资源包导入                                                                                  |
-| 测试步骤 | 1. 执行如下命令，扫描待评估软件包： \# x2openEuler scan -arch aarch64 \$softwareName 2. 查看扫描结果 扫描结果报告保存在/opt/x2openEuler/output/\$softwareName-\$time.html，可下载查看 |
+| 测试步骤 | 1. 执行如下命令，扫描待评估软件包： \# x2openEuler scan -arch aarch64 \\$softwareName 2. 查看扫描结果 扫描结果报告保存在/opt/x2openEuler/output/\\$softwareName-\\$time.html，可下载查看 |
 | 预期结果 | 报告最后输出依赖包、so库和接口在centos7.6和openEuler20.03-LTS-SP1上版本差异                                                                                                           |
 | 备注     |                                                                                                                                                                                       |
 
