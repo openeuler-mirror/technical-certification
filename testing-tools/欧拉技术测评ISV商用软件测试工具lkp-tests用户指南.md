@@ -43,7 +43,7 @@
 
     
     cd lkp-tests
-    注意：最新的lkp工具要求ruby版本不低于3.0；若操作系统默认安装ruby2.x, 需执行 git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92 回退lkp工具版本；在后续的执行过程中发生ERROR:  Error installing bundler，可视为正常，继续执行测试流程。
+    git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92。
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
     gem sources --remove https://rubygems.org/
     gem sources -a https://gems.ruby-china.com/
