@@ -34,12 +34,24 @@
 # 工具安装
 ## 步骤1. 依赖安装
     
-    yum install -y wget git rubygems-devel
+    yum install -y wget git
 
-## 步骤2. 获取工具源码
+## 步骤2. 安装ruby
+  
+   lkp-tests要求ruby 版本>= 2.6.x，部分操作系统yum源中仅有2.5.x版本，需要手动编译安装。查询方法：   
+   yum search ruby-devel --showduplicates
+   返回结果如果ruby-devel版本低于2.6.x，请手动编译安装，以下以ruby-2.6.9为例：
+   yum install -y openssl-devel readline-devel
+   wget https://repo.huaweicloud.com/ruby/ruby/2.6/ruby-2.6.9.tar.gz
+   tar -zxvf ruby-2.6.9.tar.gz
+   cd ruby-2.6.9 && ./configure
+   make -j4
+   make install
+
+## 步骤3. 获取工具源码
 
     git clone https://gitee.com/wu_fengguang/lkp-tests
-## 步骤3. 修改ruby gems源。
+## 步骤4. 修改ruby gems源。
 
     
     cd lkp-tests
@@ -47,10 +59,10 @@
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
     gem sources --remove https://rubygems.org/
     gem sources -a https://gems.ruby-china.com/
-## 步骤4. 执行安装
+## 步骤5. 执行安装
 
     make install
-## 步骤5. 写入环境变量
+## 步骤6. 写入环境变量
     
     将lkp-tests所在路径写入/etc/profile末尾，方便后续测试
     vi /etc/profile
@@ -60,7 +72,7 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 
 输入完成后，"esc"退出编辑，然后输入":wq"+"enter"保存并退出文件。
 
-## 步骤6. 使环境变量生效
+## 步骤7. 使环境变量生效
     
     source /etc/profile
 ### -- 结束
