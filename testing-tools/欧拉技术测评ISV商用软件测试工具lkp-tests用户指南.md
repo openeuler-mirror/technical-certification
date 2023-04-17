@@ -38,16 +38,17 @@
 
 ## 步骤2. 安装ruby
   
-   lkp-tests要求ruby 版本>= 2.6.x，部分操作系统yum源中仅有2.5.x版本，需要手动编译安装。查询方法：   
+   ```shell
+   # lkp-tests要求ruby 版本>= 2.6.x，部分操作系统yum源中仅有2.5.x版本，需要手动编译安装。查询方法：   
    yum search ruby-devel --showduplicates
-   返回结果如果ruby-devel版本低于2.6.x，请手动编译安装，以下以ruby-2.6.9为例：
+   # 返回结果如果ruby-devel版本低于2.6.x，请手动编译安装，以下以ruby-2.6.9为例：
    yum install -y openssl-devel readline-devel
    wget https://repo.huaweicloud.com/ruby/ruby/2.6/ruby-2.6.9.tar.gz
    tar -zxvf ruby-2.6.9.tar.gz
    cd ruby-2.6.9 && ./configure
    make -j4
    make install
-
+   ```
 ## 步骤3. 获取工具源码
 
     git clone https://gitee.com/wu_fengguang/lkp-tests
