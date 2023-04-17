@@ -34,7 +34,7 @@
 # 工具安装
 ## 步骤1. 依赖安装
     
-    yum install -y wget git
+    yum install -y wget git rubygems-devel
 
 ## 步骤2. 获取工具源码
 
@@ -43,7 +43,7 @@
 
     
     cd lkp-tests
-    git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92。
+    git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
     gem sources --remove https://rubygems.org/
     gem sources -a https://gems.ruby-china.com/
