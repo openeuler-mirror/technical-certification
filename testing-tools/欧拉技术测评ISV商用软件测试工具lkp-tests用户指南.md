@@ -119,20 +119,21 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 
 如果是JAVA Web等不涉及安装的项目，可以将安装卸载命令修改为启动和停止命令。
 
-## 步骤1. 修改安装命令
+## 步骤1. 修改安装与卸载的命令
     
-    vi $LKP_PATH/tests/compatibility-test
+    vi $LKP_PATH/tests/compatibility-test.conf
 
-    修改72行的安装命令，将安装命令的执行结果保存到变量a中
-    下面76行将出现"error"报错识别为失败，如安装过程失败提示非"error"字样，请根据实际情况修改。
+    修改第2行的安装命令，图中只是演示以shell脚本安装软件的命令形式，被测软件具体的安装命令具体修改
+    修改第4行的卸载命令，图中只是演示以shell脚本卸载软件的命令形式，被测软件具体的卸载命令具体修改
 ![lkp-tests安装命令](docs/lkp-tests安装命令.png)
 
 ## 步骤2. 修改卸载命令
     
-    vi $LKP_PATH/tests/compatibility-test
+    vi $LKP_PATH/tests/compatibility-test.conf
 
-    修改208行的卸载命令，如无出现报错，即认为修改成功
-![lkp-tests卸载命令](docs/lkp-tests卸载命令.png)
+    修改第7行的启动命令，图中只是演示以shell脚本启动软件的命令形式，被测软件具体的启动命令具体修改（要在后台运行）
+    修改第9行的停止命令，图中只是演示以shell脚本停止软件的命令形式，被测软件具体的停止命令具体修改
+![lkp-tests卸载命令](docs/lkp-tests启动和停止的命令.png)
 
 # FAQ
 ## 1. lkp install报错“Not a supported system”
