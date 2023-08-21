@@ -125,9 +125,9 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 
     修改第2行的安装命令，图中只是演示以shell脚本安装软件的命令形式，被测软件具体的安装命令具体修改
     修改第4行的卸载命令，图中只是演示以shell脚本卸载软件的命令形式，被测软件具体的卸载命令具体修改
-![lkp-tests安装命令](docs/lkp-tests安装命令.png)
+![lkp-tests安装命令](docs/lkp-tests安装和卸载的命令.png)
 
-## 步骤2. 修改卸载命令
+## 步骤2. 修改启停的命令
     
     vi $LKP_PATH/tests/compatibility-test.conf
 
