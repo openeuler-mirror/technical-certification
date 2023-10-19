@@ -30,7 +30,7 @@
 
 ![欧拉技术技术测评流程](docs/欧拉技术测评流程.png)
 
-**整个流程依托于[技术测评平台](https://certification.openeuler.org)进行，伙伴可直接前往平台进行测评申请。详细的平台使用指引请见[技术测评平台用户指南](技术测评平台用户指南.md)。**如在测评过程中遇到任何问题，可联系[创新中心](https://gitee.com/openeuler/technical-certification/issues/I87HDL?from=project-issue)支持。
+整个流程依托于[技术测评平台](https://certification.openeuler.org)进行，伙伴可直接前往平台进行测评申请。**详细的平台使用指引请见[技术测评平台用户指南](技术测评平台用户指南.md)**。如在测评过程中遇到任何问题，可联系[创新中心](https://gitee.com/openeuler/technical-certification/issues/I87HDL?from=project-issue)支持。
 
 以下是测评流程步骤简介：
 
