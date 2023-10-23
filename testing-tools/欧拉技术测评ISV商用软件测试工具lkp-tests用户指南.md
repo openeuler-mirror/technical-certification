@@ -33,11 +33,11 @@
 
 # 工具安装
 ## 步骤1. 依赖安装
-    
+
     yum install -y wget git
 
 ## 步骤2. 安装ruby
-  
+
    ```shell
    # lkp-tests要求ruby 版本>= 2.6.x，部分操作系统yum源中仅有2.5.x版本，需要手动编译安装。查询方法：   
    yum search ruby-devel --showduplicates
@@ -54,7 +54,7 @@
     git clone https://gitee.com/wu_fengguang/lkp-tests
 ## 步骤4. 修改ruby gems源。
 
-    
+
     cd lkp-tests
     git reset --hard d83fd174a6af948d95af4423ef84acc437ea9e92
     sed -i "s/rubygems.org/gems.ruby-china.com/g" Gemfile
@@ -64,17 +64,17 @@
 
     make install
 ## 步骤6. 写入环境变量
-    
+
     将lkp-tests所在路径写入/etc/profile末尾，方便后续测试
     vi /etc/profile
-
+    
     export LKP_PATH="填写lkp-tests所在路径"
 vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一行；
 
 输入完成后，"esc"退出编辑，然后输入":wq"+"enter"保存并退出文件。
 
 ## 步骤7. 使环境变量生效
-    
+
     source /etc/profile
 ### -- 结束
 
@@ -97,13 +97,13 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
     lkp install
     # 注意：这里必须安装1.12以下版本的git，否则会导致接口传参出错。
 ## 步骤2. 安装兼容性测试依赖
-     
+
     lkp split-job $LKP_PATH/jobs/compatibility-test.yaml
     lkp install -f compatibility-test-defaults.yaml
 执行成功后会在执行命令目录生成 compatibility-test-defaults.yaml 文件，用于后续任务调度，后续执行## 步骤3，也需要切换到此目录。
 
 ## 步骤3. 执行兼容性测试
-    
+
     将待测软件包放到当前目录下，执行以下命令，最终测试结果在compatibilityLog文件中
     lkp run ./compatibility-test-defaults.yaml -s 'package_name: xxxxxx' >compatibilityLog 2>& 1
 1. package_name: 后必须有一个空格，否则导致报错无法进行测试
@@ -120,26 +120,34 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 如果是JAVA Web等不涉及安装的项目，可以将安装卸载命令修改为启动和停止命令。
 
 ## 步骤1. 修改安装与卸载的命令
-    
-    vi $LKP_PATH/tests/compatibility-test.conf
 
+    vi $LKP_PATH/tests/compatibility-test.conf
+    
     修改第2行的安装命令，图中只是演示以shell脚本安装软件的命令形式，被测软件具体的安装命令具体修改
     修改第4行的卸载命令，图中只是演示以shell脚本卸载软件的命令形式，被测软件具体的卸载命令具体修改
 ![lkp-tests安装命令](docs/lkp-tests安装和卸载的命令.png)
 
 ## 步骤2. 修改启停的命令
-    
-    vi $LKP_PATH/tests/compatibility-test.conf
 
+    vi $LKP_PATH/tests/compatibility-test.conf
+    
     修改第7行的启动命令，图中只是演示以shell脚本启动软件的命令形式，被测软件具体的启动命令具体修改（要在后台运行）
     修改第9行的停止命令，图中只是演示以shell脚本停止软件的命令形式，被测软件具体的停止命令具体修改
 ![lkp-tests卸载命令](docs/lkp-tests启动和停止的命令.png)
+
+## 步骤3.查看测试结果
+
+```
+搜索compatibilityLog日志中的state字段，根据后面的值（pass/fail）来判断。应为4个pass、0个fail
+```
+
+![lkp-tests卸载命令](docs/lkp-tests测试结果查看.png)
 
 # FAQ
 ## 1. lkp install报错“Not a supported system”
 lkp-tests 根据操作系统的名称来匹配运行的脚本，当前脚本已匹配openEuler社区版本、Kylin、UOS、FusionOS和TurboLinux商业发行版，其他openEuler系发行版，需根据以下## 步骤，新增适配
 ## 步骤1. 获取操作系统名称
-    
+
     cd $LKP_PATH
     os_name=$(hostnamectl status | grep 'Operating System' | awk '{print $3}')
 以Kylin V10 sp2为例
@@ -147,13 +155,13 @@ lkp-tests 根据操作系统的名称来匹配运行的脚本，当前脚本已�
 ![获取操作系统信息](docs/获取操作系统信息.png)
 
 ## 步骤2. 添加适配文件
-    
+
     ln -s distro/aliyun distro/${os_name,,}
     cp distro/installer/openeuler distro/installer/${os_name,,}
     sed -i "s/OPENEULER/${os_name^^}/g" distro/installer/${os_name,,}
     ln -s distro/adaptation-pkg/openeuler distro/adaptation-pkg/${os_name,,}
     \cp -f distro/adaptation/openeuler distro/adaptation/${os_name,,}
 ## 步骤3. 执行安装
-    
+
     lkp install
 ### -- 结束
