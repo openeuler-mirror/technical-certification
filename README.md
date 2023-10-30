@@ -82,11 +82,11 @@
 
 **表2** 欧拉技术测评测试标准
 
-| 技术测评对象      | 用例基线                  | 测试工具               | 说明 |
+| 技术测评对象      | 用例基线                  | 测试工具               | 测试交付件 |
 | :------------ | ------------------------- | ---------------------- | ---- |
-| OSV商用发行版 | [OSV商用发行版测试用例集](https://gitee.com/openeuler/oecp/blob/master/doc/OECP工具测试标准.md) | [oecp](testing-tools/欧拉技术测评OSV操作系统测试工具oecp用户指南.md)       |      |
-| ISV商用软件   | [ISV商用软件测试用例集](testing-standard/欧拉技术测评兼容性测试用例（ISV商用软件）.md)     | [lkp-tests](testing-tools/欧拉技术测评ISV商用软件测试工具lkp-tests用户指南.md) + [x2openEuler](testing-tools/欧拉技术测评ISV商用软件扫描工具x2openEuler用户指南.md)             |      |
-| IHV整机和板卡 | [整机用例集+板卡测试用例集](testing-standard/欧拉技术测评兼容性测试用例（整机&板卡）.md) | [oec-hardware](testing-tools/欧拉技术测评IHV整机&板卡测试工具oec-hardware用户指南.md) |      |
+| OSV商用发行版 | [OSV商用发行版测试用例集](https://gitee.com/openeuler/oecp/blob/master/doc/) | [oecp](testing-tools/欧拉技术测评OSV操作系统测试工具oecp用户指南.md)       | 工具测试结果excel文件 + 社区测评结论邮件截图 |
+| ISV商用软件   | [ISV商用软件测试用例集](testing-standard/欧拉技术测评兼容性测试用例（ISV商用软件）.md)     | [lkp-tests](testing-tools/欧拉技术测评ISV商用软件测试工具lkp-tests用户指南.md) + [x2openEuler](testing-tools/欧拉技术测评ISV商用软件扫描工具x2openEuler用户指南.md)             | [测试报告word文件](https://gitee.com/whatamaze/compatibility-test/tree/master/templates) |
+| IHV整机和板卡 | [整机用例集+板卡测试用例集](testing-standard/欧拉技术测评兼容性测试用例（整机&板卡）.md) | [oec-hardware](testing-tools/欧拉技术测评IHV整机&板卡测试工具oec-hardware用户指南.md) | 工具pass/fail截图 + 测试日志 + [整机/板卡兼容性发布excel文件](https://gitee.com/openeuler/oec-hardware/tree/master/templates) |
 
 
 
