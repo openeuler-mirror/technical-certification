@@ -35,10 +35,10 @@
 
 
     AARCH64请执行以下命令：
-    wget https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler/aarch64/Packages/x2openEuler-2.0.0-1.aarch64.rpm
+    wget https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler/aarch64/Packages/x2openEuler-2.0.0-430.aarch64.rpm
     X86请执行以下命令
-    wget https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler/x86_64/Packages/x2openEuler-2.0.0-1.x86_64.rpm
-    版本变更下载地址可能会变动，可以访问 https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler 获取
+    wget https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler/x86_64/Packages/x2openEuler-2.0.0-430.x86_64.rpm
+    版本变更下载地址可能会变动，可以访问 https://repo.oepkgs.net/openEuler/rpm/openEuler-20.03-LTS-SP1/contrib/x2openEuler/`uname -m`/Packages/ 获取
 
 ## 步骤3. 安装x2openEuler
     

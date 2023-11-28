@@ -120,7 +120,6 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 如果是JAVA Web等不涉及安装的项目，可以将安装卸载命令修改为启动和停止命令。
 
 ## 步骤1. 修改安装与卸载的命令
-
     vi $LKP_PATH/tests/compatibility-test.conf
     
     修改第2行的安装命令，图中只是演示以shell脚本安装软件的命令形式，被测软件具体的安装命令具体修改
@@ -157,8 +156,8 @@ lkp-tests 根据操作系统的名称来匹配运行的脚本，当前脚本已�
 ## 步骤2. 添加适配文件
 
     ln -s distro/aliyun distro/${os_name,,}
-    cp distro/installer/openeuler distro/installer/${os_name,,}
-    sed -i "s/OPENEULER/${os_name^^}/g" distro/installer/${os_name,,}
+    cp distro/openeuler distro/${os_name,,}
+    sed -i "s/OPENEULER/${os_name^^}/g" distro/${os_name,,}
     ln -s distro/adaptation-pkg/openeuler distro/adaptation-pkg/${os_name,,}
     \cp -f distro/adaptation/openeuler distro/adaptation/${os_name,,}
 ## 步骤3. 执行安装
