@@ -137,10 +137,13 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
 ## 步骤3.查看测试结果
 
 ```
-搜索compatibilityLog日志中的state字段，根据后面的值（pass/fail）来判断。应为4个pass、0个fail
+1.搜索compatibilityLog日志中的state字段，根据后面的值（pass/fail）来判断。应为4个pass、0个fail。
+2.搜索compatibilityLog日志中的“compatibility-tools-identification:”字段来判断当前测试环境的操作系统。
 ```
 
-![lkp-tests卸载命令](docs/lkp-tests测试结果查看.png)
+![lkp-tests测试结果查看](docs/lkp-tests测试结果查看.png)
+![lkp-tests测试环境操作系统信息的搜集](docs/lkp-tests测试环境操作系统信息的搜集.png)
+
 
 # FAQ
 ## 1. lkp install报错“Not a supported system”
