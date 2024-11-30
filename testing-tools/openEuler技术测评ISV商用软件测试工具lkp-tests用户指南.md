@@ -34,7 +34,7 @@
 # 工具安装
 ## 步骤1. 依赖安装
 
-    yum install -y wget git
+    yum install -y wget git gem
 
 ## 步骤2. 安装ruby
 
@@ -107,7 +107,7 @@ vi 打开文件后，"ctrl"+"g"跳到文件末尾，然后按下"o" 编辑下一
     将待测软件包放到当前目录下，执行以下命令，最终测试结果在compatibilityLog文件中
     lkp run ./compatibility-test-defaults.yaml -s 'package_name: xxxxxx' >compatibilityLog 2>& 1
 1. package_name: 后必须有一个空格，否则导致报错无法进行测试
-2. 此处package_name后需填写软件包文件全名，例如nginx-1.14.2-1.oe1.aarch
+2. 此处package_name后需填写软件包文件全名，例如nginx-1.14.2-1.oe1.aarch64.rpm
 3. 当前脚本适配rpm包，如无法直接使用rpm -ivh等rpm命令进行安装、卸载，请根据在脚本中修改安装卸载命令，详见[修改安装和卸载命令](#修改安装和卸载命令)
 
 ### -- 结束
@@ -158,11 +158,10 @@ lkp-tests 根据操作系统的名称来匹配运行的脚本，当前脚本已�
 
 ## 步骤2. 添加适配文件
 
-    ln -s distro/aliyun distro/${os_name,,}
     cp distro/openeuler distro/${os_name,,}
     sed -i "s/OPENEULER/${os_name^^}/g" distro/${os_name,,}
-    ln -s distro/adaptation-pkg/openeuler distro/adaptation-pkg/${os_name,,}
-    \cp -f distro/adaptation/openeuler distro/adaptation/${os_name,,}
+    cp -f distro/adaptation-pkg/openeuler distro/adaptation-pkg/${os_name,,}
+    cp -f distro/adaptation/openeuler distro/adaptation/${os_name,,}
 ## 步骤3. 执行安装
 
     lkp install
