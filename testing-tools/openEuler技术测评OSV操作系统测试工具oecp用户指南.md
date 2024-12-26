@@ -62,8 +62,8 @@ OECP工具比较的是2个ISO之间的静态差异，OECP工具需借助compass-
     python3  cli.py   file1  file2
 
 ```
-#file1: 待测试的目标ISO
 #file1: 基线ISO，用于和目标ISO对比
+#file2: 待测试的目标ISO
 ```
 ## 步骤2. 查看结果
 
