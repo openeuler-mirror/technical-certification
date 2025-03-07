@@ -30,7 +30,7 @@ openEuler兼容性技术测评标准确认和发布的流程如下：
 
 ![openEuler技术技术测评流程](docs/openEuler技术测评流程.png)
 
-整个流程依托于[技术测评平台](https://certification.openeuler.org)进行，伙伴可直接前往平台进行测评申请。**详细的平台使用指引请见[技术测评平台用户指南](技术测评平台用户指南.md)**。如在测评过程中遇到任何问题，可联系[创新中心](https://gitee.com/openeuler/technical-certification/issues/I9MY2A?from=project-issue)支持。
+整个流程依托于[技术测评平台](https://certification.openeuler.org)进行，伙伴可直接前往平台进行测评申请。**详细的平台使用指引请见[技术测评平台用户指南](技术测评平台用户指南.md)**。如在测评过程中遇到任何问题，可联系[创新中心](https://gitee.com/openeuler/technical-certification/issues/I9MY2A?from=project-issue)和联合验证中心支持。
 
 以下是测评流程步骤简介：
 
@@ -49,6 +49,7 @@ openEuler兼容性技术测评标准确认和发布的流程如下：
 - 步骤4. 执行测试
 
   通过审核后，如果伙伴缺少测试环境，可在创新中心申请测试资源，创新中心会根据伙伴方案的需求，发放对应的测试环境，之后协助伙伴进行迁移适配、按照[测试标准](#测试标准)测试执行和测试结果收集提交，并最终生成测试报告。
+  选择联合验证中心测试的，请将服务器自行寄送至联合验证中心，联合验证中心按照测试标准进行测试执行和测试结果收集提交。
 
 - 步骤5. 提交报告评审
 
